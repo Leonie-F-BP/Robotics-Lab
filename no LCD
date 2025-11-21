@@ -1,0 +1,58 @@
+float duration;
+float distance; // will give decimal values
+const int trigPin = 10; // connecting the trig 
+const int echoPin = 2; // 
+
+
+void setup() {
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+
+  time_Measurement();
+  distance = duration * (0.0343) / 2;
+  display_distance();
+
+  long duration, inches, cm;
+
+
+  duration = pulseIn(echoPin, HIGH);
+
+
+  inches = microsecondsToInches(duration);
+  cm = microsecondsToCentimeters(duration);
+}
+
+long microsecondsToInches(long microseconds) {
+
+  return microseconds / 74 / 2;
+}
+
+long microsecondsToCentimeters(long microseconds) {
+
+  return microseconds / 29 / 2;
+}
+
+void time_Measurement() {
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+}
+
+void display_distance() {
+
+  Serial.print("Distance in Cm: ");
+  Serial.print(distance);
+  Serial.println();
+
+  delay(1000);
+}
