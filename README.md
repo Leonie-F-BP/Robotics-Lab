@@ -1,0 +1,1 @@
+Successful code for line tracking - we had a loop calling just function ‘go advance’ - it was ignoring auto tracking because of this loop, once we deleted go advanced and replaced with auto tracking it worked
