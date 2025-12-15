@@ -158,11 +158,7 @@ String watchsurrounding() {
 
   return obstacle_str;  //return 5-character string standing for 5 direction obstacle status
 }
-
-//wallFollow() function - takes a wide turn around an object until reaching a line
-void wallFollow() {
-  //String obstacle_sign = watchsurrounding();
-  head.write(180); //turn left assuming 180 is left
+void initialWallManeuver() {
   stop();
   setSpeed(speed, speed);
   backward();
@@ -171,45 +167,50 @@ void wallFollow() {
   delay(800);
   forward();
   delay(200);
+}
+//wallFollow() function - takes a wide turn around an object until reaching a line
+void wallFollow() {
+  //String obstacle_sign = watchsurrounding();
+  //head.write(180); //turn left assuming 180 is left
+  
   //++numcycles;
   //if (numcycles >= LPT) {  //Watch if something is around every LPT loops while moving forward
   //if using numcycles add numcycles = 0; into different if statements
-    stop();
-    String obstacle_sign = watchsurrounding();  // 5 digits of obstacle_sign binary value means the 5 direction obstacle status //assumes 180 means left and 0 means right
-    if (obstacle_sign == "00000") {//no obstacle
-      left();//start going left in order to get back to the line
-      delay(500);
-      forward();
-      delay(200);
-    }else if (obstacle_sign == "10000") {
-      forward();
-      delay(200);
-    } else if (obstacle_sign == "11000" || obstacle_sign == "01000"){
-      right();
-      delay(200); //(a little more right)
-      forward();
-      delay(200);
-    }
-    else if (obstacle_sign == "11100"|| obstacle_sign == "01100"|| obstacle_sign == "10100"){
-      right();
-      delay(800); // a lot right
-      forward();
-      delay(200);
-    }
-
-  //  else if  {//(obstacle_sign == "10101"|| obstacle_sign == "01001"|| obstacle_sign == "10111" || obstacle_sign == "10001" 
-   // || obstacle_sign == "10010" || obstacle_sign == "11001" || obstacle_sign == "10011" ){ // local minimum? robot won't fit likely
-      //complete reverse and become a left turning robot
-  //  }
-    else {
-      backward();
-      delay(200);
-      leff();
-      delay(1600);
-      forward();
-      delay(400); //it has no become left turning add code for left turning opperation, give up if it hits the same issue
-    }
+  stop();
+  String obstacle_sign = watchsurrounding();  // 5 digits of obstacle_sign binary value means the 5 direction obstacle status //assumes 180 means left and 0 means right
+  if (obstacle_sign == "00000") {             //no obstacle
+    left();                                   //start going left in order to get back to the line
+    delay(500);
+    forward();
+    delay(200);
+  } else if (obstacle_sign == "10000") {
+    forward();
+    delay(200);
+  } else if (obstacle_sign == "11000" || obstacle_sign == "01000") {
+    right();
+    delay(200);  //(a little more right)
+    forward();
+    delay(200);
+  } else if (obstacle_sign == "11100" || obstacle_sign == "01100" || obstacle_sign == "10100") {
+    right();
+    delay(800);  // a lot right
+    forward();
+    delay(200);
   }
+
+  //  else if  {//(obstacle_sign == "10101"|| obstacle_sign == "01001"|| obstacle_sign == "10111" || obstacle_sign == "10001"
+  // || obstacle_sign == "10010" || obstacle_sign == "11001" || obstacle_sign == "10011" ){ // local minimum? robot won't fit likely
+  //complete reverse and become a left turning robot
+  //  }
+  else {
+    backward();
+    delay(200);
+    left();
+    delay(1600);  //should do a 180
+    forward();
+    delay(400);  //it has no become left turning add code for left turning opperation, give up if it hits the same issue
+  }
+}
 //}
 
 //creates an empty character array consisting of 5 items
@@ -294,6 +295,8 @@ void setup() {
 bool goalReached = false;
 bool wallHit = false;
 bool lineHit = false;
+bool wallManeuverDone = false;
+
 String lastHit = "";
 void loop() {
   if (!goalReached) {
@@ -308,8 +311,8 @@ void goalSequence() {
   head.write(90);
   if (!wallHit) {
     String sensorVal = getSensorValues();
-    if ((sensorVal == "11111" ) && (lastHit == "line")) { //would like to add sensorVal == "00000" to imply that if it goes from line following
-    // to no line it has reached it's goal
+    if ((sensorVal == "11111") && (lastHit == "line")) {  //would like to add sensorVal == "00000" to imply that if it goes from line following
+                                                          // to no line it has reached it's goal
       stop();
       setSpeed(0, 0);  //stopping the car as the goal has been reached
       goalReached = true;
@@ -327,14 +330,15 @@ void goalSequence() {
       lastHit = "wall";
       wallHit = true;
       lineHit = false;
+      wallManeuverDone = false;
     } else {
       //head.write(90);
       lineTracking();
     }
   } else if (!lineHit) {
     String sensorVal = getSensorValues();
-    if (sensorVal.indexOf("1") >= 0) { //checking for any sign of a line after leaving the line- could be falsly triggered resulting 
-    //in early exit of wall following messing up navigation
+    if (sensorVal.indexOf("1") >= 0) {  //checking for any sign of a line after leaving the line- could be falsly triggered resulting
+                                        //in early exit of wall following messing up navigation
       head.write(90);
       stop();
       setSpeed(0, 0);
@@ -346,9 +350,14 @@ void goalSequence() {
       wallHit = false;
       lineHit = true;
     } else {
-      head.write(180);
+      // head.write(180);
+      if (!wallManeuverDone) {
+        initialWallManeuver();
+        wallManeuverDone = true;
+      }
+
+      // Every time - do navigation
       wallFollow();
-   
     }
   }
 }
